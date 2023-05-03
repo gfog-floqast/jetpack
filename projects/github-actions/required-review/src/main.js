@@ -3,6 +3,7 @@ const core = require( '@actions/core' );
 const yaml = require( 'js-yaml' );
 const reporter = require( './reporter.js' );
 const Requirement = require( './requirement.js' );
+const reviewRequest = require( './review-request.js' );
 
 /**
  * Load the requirements yaml file.
@@ -10,9 +11,9 @@ const Requirement = require( './requirement.js' );
  * @returns {Requirement[]} Requirements.
  */
 async function getRequirements() {
-	let reqirementsString = core.getInput( 'requirements' );
+	let requirementsString = core.getInput( 'requirements' );
 
-	if ( ! reqirementsString ) {
+	if ( ! requirementsString ) {
 		const filename = core.getInput( 'requirements-file' );
 		if ( ! filename ) {
 			throw new reporter.ReportError(
@@ -23,7 +24,7 @@ async function getRequirements() {
 		}
 
 		try {
-			reqirementsString = fs.readFileSync( filename, 'utf8' );
+			requirementsString = fs.readFileSync( filename, 'utf8' );
 		} catch ( error ) {
 			throw new reporter.ReportError(
 				`Requirements file ${ filename } could not be read`,
@@ -36,7 +37,7 @@ async function getRequirements() {
 	}
 
 	try {
-		const requirements = yaml.load( reqirementsString, {
+		const requirements = yaml.load( requirementsString, {
 			onWarning: w => core.warning( `Yaml: ${ w.message }` ),
 		} );
 		if ( ! Array.isArray( requirements ) ) {
@@ -84,7 +85,8 @@ async function main() {
 			} else {
 				ok = false;
 				core.endGroup();
-				core.error( `Requirement "${ r.name }" is not satisfied by the existing reviews.` );
+				core.error( `Requirement "${ r.name }" is not satisfied by the existing reviews, requesting review` );
+                                await reviewRequest.requestReview( reviewers )
 			}
 		}
 		if ( ok ) {
