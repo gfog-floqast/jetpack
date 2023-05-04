@@ -29,11 +29,11 @@ function printSet( label, items ) {
 function buildReviewerFilter( config, teamConfig, indent ) {
 	if ( typeof teamConfig === 'string' ) {
 		const team = teamConfig;
-		return async function ( reviewers ) {
+		return async function ( reviewers ) { //this function returns subset of reviewers
 			const members = await fetchTeamMembers( team );
-			return printSet(
+			return printSet( //could this be changed to a 'const reviewers_that_are_team_members'
 				`${ indent }Members of ${ team }:`,
-				reviewers.filter( reviewer => members.includes( reviewer ) )
+				reviewers.filter( reviewer => members.includes( reviewer ) ) //If this is empty, then the team is outstanding for review and should be requested, then return reviewer and list of teams that have the empty set (no reviewers) (see isSatisfied)
 			);
 		};
 	}
@@ -50,7 +50,7 @@ function buildReviewerFilter( config, teamConfig, indent ) {
 	}
 
 	const op = keys[ 0 ];
-	let arg = teamConfig[ op ];
+	let arg = teamConfig[ op ]; // arg is the array of filter functions checking for team membership in any/all-of block
 
 	switch ( op ) {
 		case 'any-of':
@@ -68,7 +68,7 @@ function buildReviewerFilter( config, teamConfig, indent ) {
 					value: teamConfig,
 				} );
 			}
-			arg = arg.map( t => buildReviewerFilter( config, t, `${ indent }  ` ) );
+			arg = arg.map( t => buildReviewerFilter( config, t, `${ indent }  ` ) ); //
 			break;
 
 		default:
@@ -164,6 +164,7 @@ class Requirement {
 		}
 
 		this.reviewerFilter = buildReviewerFilter( config, { 'any-of': config.teams }, '  ' );
+		// what if a different filter that took reviewers and return teams that do not have members who are reviewers
 		this.consume = !! config.consume;
 	}
 
@@ -217,7 +218,7 @@ class Requirement {
 	 */
 	async isSatisfied( reviewers ) {
 		core.info( 'Checking reviewers...' );
-		return ( await this.reviewerFilter( reviewers ) ).length > 0;
+		return ( await this.reviewerFilter( reviewers ) ).length > 0; //would then need to get into the object to return the reviewers (original value) or can access the team array
 	}
 }
 

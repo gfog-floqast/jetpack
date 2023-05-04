@@ -11,7 +11,7 @@ const cache = {};
  * @param {string} team - GitHub team slug, or @ followed by a GitHub user name.
  * @returns {string[]} Team members.
  */
-async function requestReview( reviewers ) {
+async function requestReview( team ) {
 	if ( cache[ team ] ) {
 		return cache[ team ];
 	}

@@ -3,7 +3,7 @@ const core = require( '@actions/core' );
 const yaml = require( 'js-yaml' );
 const reporter = require( './reporter.js' );
 const Requirement = require( './requirement.js' );
-const reviewRequest = require( './review-request.js' );
+//const reviewRequest = require( './review-request.js' );
 
 /**
  * Load the requirements yaml file.
@@ -56,7 +56,13 @@ async function getRequirements() {
  */
 async function main() {
 	try {
+		core.info( `Hello, I'm running the proper function.` );
 		const requirements = await getRequirements();
+		/* take required teams as a list from requirements, 
+		* pass to function that checks reviewers against the teams (), 
+		* and removes teams for which the reviewer is a member
+		* Pass this list into the request-reviewers function for review request.
+		*/
 		core.startGroup( `Loaded ${ requirements.length } review requirement(s)` );
 
 		const reviewers = await require( './reviewers.js' )();
@@ -79,14 +85,14 @@ async function main() {
 			if ( ! applies ) {
 				core.endGroup();
 				core.info( `Requirement "${ r.name }" does not apply to any files in this PR.` );
-			} else if ( await r.isSatisfied( reviewers ) ) {
+			} else if ( await r.isSatisfied( reviewers ) ) { //can this tell us why it's not statisfied so we can pass that on to the else
 				core.endGroup();
 				core.info( `Requirement "${ r.name }" is satisfied by the existing reviews.` );
 			} else {
 				ok = false;
 				core.endGroup();
 				core.error( `Requirement "${ r.name }" is not satisfied by the existing reviews, requesting review` );
-                                await reviewRequest.requestReview( reviewers )
+				//await r.requestTeam( team ) // need function same as isSatisfied that returns teams that are both satisfied and those that aren't. And then pass a list of teams
 			}
 		}
 		if ( ok ) {
